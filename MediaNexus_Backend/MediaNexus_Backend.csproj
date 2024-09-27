@@ -45,6 +45,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Genres.cs" />
+    <Compile Include="Media.cs" />
     <Compile Include="MNBackend.cs" />
     <Compile Include="DB.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -26,5 +26,24 @@ namespace MediaNexus_Backend
         {
             return DB.Register(userLogin, password,email);
         }
+
+        static public Media[] GetRecentMedia(int numMedia, int page)
+        {
+            return DB.GetRecentMedia(numMedia, page);
+        }
+
+        static public int GetMediaCount(string table)
+        {
+            return DB.GetMediaCount(table);
+        }
+        static public Genres[] GetGenres()
+        {
+            return DB.GetGenres();
+        }
+
+        static public void addMedia(Genres[] genres, Media media)
+        {
+            DB.addMediaToDatabase(media, genres);
+        }
     }
 }

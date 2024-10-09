@@ -19,7 +19,7 @@ namespace MediaNexus_Backend
 
         public override string ToString()
         {
-            return GenreName; 
+            return GenreName;
         }
     }
 }

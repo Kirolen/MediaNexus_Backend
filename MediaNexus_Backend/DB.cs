@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -36,6 +38,179 @@ namespace MediaNexus_Backend
             }
         }
 
+        public static int CountFilteredMedia(SortMediacs sortCriteria)
+        {
+            // Побудова запиту для підрахунку
+            var queryBuilder = new StringBuilder("SELECT COUNT(DISTINCT mm.id) FROM MainMedia mm ");
+            queryBuilder.Append("LEFT JOIN MediaGenres mg ON mm.id = mg.MediaID ");
+
+            var conditions = new List<string>();
+
+            // Умови для selectedTypes
+            if (sortCriteria.selectedTypes.Length > 0)
+            {
+                conditions.Add("mm.MainMediaType IN (" + string.Join(", ", sortCriteria.selectedTypes.Select(t => $"'{t}'")) + ")");
+            }
+
+            // Умови для selectedGenres
+            if (sortCriteria.selectedGenres.Length > 0)
+            {
+                conditions.Add("mg.GenreID IN (" + string.Join(", ", sortCriteria.selectedGenres.Select(g => g.GenreID)) + ")");
+            }
+
+            // Умови для selectedStatus
+            if (sortCriteria.selectedStatus.Length > 0)
+            {
+                conditions.Add("mm.MediaStatus IN (" + string.Join(", ", sortCriteria.selectedStatus.Select(s => $"'{s}'")) + ")");
+            }
+
+            // Додаємо умови до запиту
+            if (conditions.Count > 0)
+            {
+                queryBuilder.Append("WHERE ");
+                queryBuilder.Append(string.Join(" AND ", conditions));
+            }
+
+            string query = queryBuilder.ToString();
+            int total = 0;
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    ConnectionOpen(connection);
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        total = Convert.ToInt32(command.ExecuteScalar());
+                    }
+                    ConnectionClose(connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while counting filtered media: {ex.Message}");
+            }
+
+            return total;
+        }
+
+        public static MainMedia[] GetFilteredMedia(SortMediacs sortCriteria, int numMedia, int page)
+        {
+            int offset = (page - 1) * numMedia;
+
+            // Побудова запиту
+            var queryBuilder = new StringBuilder("SELECT DISTINCT mm.* FROM MainMedia mm ");
+            queryBuilder.Append("LEFT JOIN MediaGenres mg ON mm.id = mg.MediaID ");
+
+            var conditions = new List<string>();
+
+            // Умови для selectedTypes
+            if (sortCriteria.selectedTypes.Length > 0)
+            {
+                conditions.Add("mm.MainMediaType IN (" + string.Join(", ", sortCriteria.selectedTypes.Select(t => $"'{t}'")) + ")");
+            }
+
+            // Умови для selectedGenres
+            if (sortCriteria.selectedGenres.Length > 0)
+            {
+                conditions.Add("mg.GenreID IN (" + string.Join(", ", sortCriteria.selectedGenres.Select(g => g.GenreID)) + ")");
+            }
+
+            // Умови для selectedStatus
+            if (sortCriteria.selectedStatus.Length > 0)
+            {
+                conditions.Add("mm.MediaStatus IN (" + string.Join(", ", sortCriteria.selectedStatus.Select(s => $"'{s}'")) + ")");
+            }
+
+            // Додаємо умови до запиту
+            if (conditions.Count > 0)
+            {
+                queryBuilder.Append("WHERE ");
+                queryBuilder.Append(string.Join(" AND ", conditions));
+            }
+
+            // Додаємо сортування та обмеження
+            queryBuilder.Append(" ORDER BY DateAdded DESC, OriginalName DESC ");
+            queryBuilder.Append("LIMIT @total OFFSET @offset");
+
+            string query = queryBuilder.ToString();
+            Console.WriteLine(query);
+            List<MainMedia> mediaList = new List<MainMedia>();
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    ConnectionOpen(connection);
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@total", numMedia);
+                        command.Parameters.AddWithValue("@offset", offset);
+
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                MainMedia media = new MainMedia
+                                {
+                                    Id = reader.GetInt32("id"),
+                                    MainType = (MainMediaType)Enum.Parse(typeof(MainMediaType), reader.GetString("MainMediaType")),
+                                    OriginalName = reader.GetString("OriginalName"),
+                                    EnglishName = reader.IsDBNull(reader.GetOrdinal("EnglishName")) ? null : reader.GetString("EnglishName"),
+                                    ImageURL = reader.GetString("ImageURL"),
+                                };
+
+                                mediaList.Add(media);
+                            }
+                        }
+                    }
+                    ConnectionClose(connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while fetching filtered media: {ex.Message}");
+            }
+
+            return mediaList.ToArray();
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         public static DataTable GetAllMedia()
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -50,12 +225,148 @@ namespace MediaNexus_Backend
                 return table;
             }
         }
+        public static Media GetMedia(int id)
+        {
+            string query = @"SELECT * 
+                    FROM MainMedia 
+                    JOIN Media ON MainMedia.id = Media.MediaId 
+                    WHERE MainMedia.id = @id;";
 
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    ConnectionOpen(connection);
+
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@id", id);
+
+                        using (MySqlDataReader reader = command.ExecuteReader())
+                        {
+                            if (reader.Read()) // Перевіряємо, чи є результати
+                            {
+                                Media media = new Media
+                                {
+                                    Id = reader.GetInt32("id"),
+                                    MainType = (MainMediaType)Enum.Parse(typeof(MainMediaType), reader.GetString("MainMediaType")),
+                                    OriginalName = reader.GetString("OriginalName"),
+                                    EnglishName = reader.IsDBNull(reader.GetOrdinal("EnglishName")) ? null : reader.GetString("EnglishName"),
+                                    ImageURL = reader.GetString("ImageURL"),
+                                    Status = (MediaStatus)Enum.Parse(typeof(MediaStatus), reader.GetString("MediaStatus")),
+                                    PG_Rating = (PG_Rating)Enum.Parse(typeof(PG_Rating), reader.GetString("PG_Rating")),
+                                    Description = reader.GetString("Description"),
+                                    IsAdded = reader.GetBoolean("isAdded"),
+                                    IDUserWhoAdded = reader.GetInt32("IDUserWhoAdded"),
+                                    TimeAdded = reader.GetDateTime("DateAdded"),
+                                    SecondMediaType = (MediaType)Enum.Parse(typeof(MediaType), reader.GetString("MediaType")),
+                                    Studio = reader.GetString("Studio"),
+                                    TotalEpisodes = reader.GetInt32("TotalEpisodes"),
+                                    ReleasedEpisode = reader.GetInt32("ReleasedEpisode"),
+                                    EpisodeDuration = reader.GetInt32("EpisodeDuration"),
+                                    TimeUntilNewEpisodeInSeconds = reader.GetInt32("TimeUntilNewEpisodeInSeconds"),
+                                    StartDate = reader.IsDBNull(reader.GetOrdinal("StartDate")) ? (DateTime?)null : reader.GetDateTime("StartDate"),
+                                    EndDate = reader.IsDBNull(reader.GetOrdinal("EndDate")) ? (DateTime?)null : reader.GetDateTime("EndDate"),
+                                };
+
+                                return media; // Повертаємо результат
+                            }
+                        }
+                    }
+
+                    ConnectionClose(connection);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"An error occurred while fetching media: {ex.Message}");
+            }
+
+            return null; // Повертаємо null у разі помилки або відсутності результатів
+        }
+
+        static public MainMedia GetSelectedMedia(string[] selectedTypes, Genres[] selectedGenres, string[] selectedStatus)
+        {
+            var mediaList = new List<MainMedia>();
+
+            var queryBuilder = new StringBuilder("SELECT DISTINCT mm.* FROM MainMedia mm ");
+            queryBuilder.Append("JOIN MediaGenres mg ON mm.id = mg.MediaID ");
+
+            // Перевірка наявності умов
+            var conditions = new List<string>();
+
+            if (selectedTypes.Length > 0)
+            {
+                conditions.Add("mm.MainMediaType IN (" + string.Join(", ", selectedTypes.Select(t => $"'{t}'")) + ")");
+            }
+
+            if (selectedGenres.Length > 0)
+            {
+                conditions.Add("mg.GenreID IN (" + string.Join(", ", selectedGenres.Select(g => g.GenreID)) + ")");
+            }
+
+            if (selectedStatus.Length > 0)
+            {
+                conditions.Add("mm.MediaStatus IN (" + string.Join(", ", selectedStatus.Select(s => $"'{s}'")) + ")");
+            }
+
+            // Додаємо умови до запиту
+            if (conditions.Count > 0)
+            {
+                queryBuilder.Append("WHERE ");
+                queryBuilder.Append(string.Join(" AND ", conditions));
+            }
+
+            string query = queryBuilder.ToString();
+
+            // Тут буде виконання запиту і повернення результату
+            Console.WriteLine(query); // Для перевірки SQL-запиту
+            return new MainMedia();
+        }
+
+
+        public static int GetMainMediaCount()
+        {
+            int count = 0;
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection("your_connection_string"))
+                {
+                    connection.Open();
+                    string query = "SELECT COUNT(*) FROM MainMedia;";
+
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        // Виконуємо запит і отримуємо результат
+                        object result = command.ExecuteScalar();
+
+                        // Перевіряємо, чи не є результат null, і приводимо до int
+                        if (result != null)
+                        {
+                            count = Convert.ToInt32(result); // Використовуємо Convert для безпечного перетворення
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                // Обробка помилки SQL
+                Console.WriteLine("SQL Error: " + ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // Обробка інших помилок
+                Console.WriteLine("Error: " + ex.Message);
+            }
+
+            return count;
+        }
         public static MainMedia[] GetRecentMedia(int numMedia, int page)
         {
             int offset = (page - 1) * numMedia;
 
-            string query = @"SELECT id, OriginalName, EnglishName, 
+            string query = @"SELECT id, MainMediaType, OriginalName, EnglishName, 
                              ImageURL, MediaStatus, PG_Rating, Description, IsAdded, IDUserWhoAdded, DateAdded 
                              FROM `MainMedia` 
                              ORDER BY `DateAdded` DESC, `OriginalName` DESC 
@@ -80,6 +391,7 @@ namespace MediaNexus_Backend
                                 MainMedia media = new MainMedia
                                 {
                                     Id = reader.GetInt32("id"),
+                                    MainType = (MainMediaType)Enum.Parse(typeof(MainMediaType), reader.GetString("MainMediaType")),
                                     OriginalName = reader.GetString("OriginalName"),
                                     EnglishName = reader.IsDBNull(reader.GetOrdinal("EnglishName")) ? null : reader.GetString("EnglishName"),
                                     ImageURL = reader.GetString("ImageURL"),
@@ -99,7 +411,6 @@ namespace MediaNexus_Backend
 
             return mediaList.ToArray();
         }
-
         public static User CheckLogin(string loginUser, string passUser)
         {
             string hashedPassword = ComputeSha256Hash(passUser);
@@ -441,8 +752,6 @@ namespace MediaNexus_Backend
                 }
             }
         }
-
-
         private static bool AddConnectionBetweenMedia(long mediaID, Genres[] genres)
         {
             if (genres == null || genres.Length == 0)
@@ -481,10 +790,6 @@ namespace MediaNexus_Backend
                 }
             }
         }
-
-
-
-
         public static Genres[] GetGenres()
         {
             List<Genres> genresList = new List<Genres>();

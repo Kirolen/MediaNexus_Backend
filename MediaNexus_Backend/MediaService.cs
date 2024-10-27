@@ -7,19 +7,19 @@ namespace MediaNexus_Backend
 {
     public class MediaService
     {
-        public static MainMedia[] GetFilteredMedia(SortMediacs sortCriteria, int numMedia, int page)
+        public static MainMedia[] GetFilteredMedia(SortMedia sortCriteria, int numMedia, int page)
         {
             return DB.GetFilteredMedia(sortCriteria, numMedia, page);
         }
 
-        public static int CountFilteredMedia(SortMediacs sortCriteria)
+        public static int CountFilteredMedia(SortMedia sortCriteria)
         {
             return DB.CountFilteredMedia(sortCriteria);
         }
 
-        static public MainMedia[] GetRecentMedia(int numMedia, int page)
+        public static UserMediaStatus GetUserMediaStatus(int userId, int mediaId)
         {
-            return DB.GetRecentMedia(numMedia, page);
+            return DB.GetUserMediaStatus(userId, mediaId);
         }
 
         static public User CheckLogin(string loginUser, string passUser)
@@ -55,13 +55,14 @@ namespace MediaNexus_Backend
             return DB.GetMedia(id);
         }
 
-        public static int GetMediaCount() {
-            return DB.GetMainMediaCount();
+        public static void AddOrUpdateUserMediaStatus(UserMediaStatus userMediaStatus)
+        {
+            DB.AddOrUpdateUserMediaStatus(userMediaStatus);
         }
 
-        public static void GetSelectedMedia(string[] selectedTypes, Genres[] selectedGenres, string[] selectedStatus)
+        public static int GetMediaCountByType(MainMediaType mediaType, int mediaId)
         {
-            DB.GetSelectedMedia(selectedTypes, selectedGenres, selectedStatus);
+            return DB.GetMediaCountByType(mediaType, mediaId);
         }
     }
 }

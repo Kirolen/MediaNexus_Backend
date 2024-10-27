@@ -62,8 +62,9 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-    <Compile Include="SortMediacs.cs" />
+    <Compile Include="SortMedia.cs" />
     <Compile Include="User.cs" />
+    <Compile Include="UserMediaStatus.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

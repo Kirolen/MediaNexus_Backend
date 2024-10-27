@@ -6,20 +6,24 @@ using System.Threading.Tasks;
 
 namespace MediaNexus_Backend
 {
-    public class SortMediacs
+    public class SortMedia
     {
         public string[] selectedTypes = Array.Empty<string>();
         public Genres[] selectedGenres = Array.Empty<Genres>();
         public string[] selectedStatus = Array.Empty<string>();
+        public string[] selectedMediaStatus = Array.Empty<string>();
         public int Total;
+        public int userID;
 
-        public SortMediacs(string[] Types, Genres[] genres, string[] status)
+        public SortMedia(string[] Types, Genres[] genres, string[] status, string[] mediaStatus, int userId)
         {
             selectedTypes = Types;
             selectedGenres = genres;
             selectedStatus = status;
+            selectedMediaStatus = mediaStatus;
+            userID = userId;
         }
 
-        public SortMediacs() { }
+        public SortMedia() { }
     }
 }

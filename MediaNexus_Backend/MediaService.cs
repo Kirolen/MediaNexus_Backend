@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using MySql.Data.MySqlClient;
@@ -22,9 +23,13 @@ namespace MediaNexus_Backend
             return DB.GetUserMediaStatus(userId, mediaId);
         }
 
+        public static bool AddUserResponseToDatabase(UserResponse response)
+        {
+            return DB.AddUserResponseToDatabase(response);
+        }
         static public User CheckLogin(string loginUser, string passUser)
         {
-            return DB.CheckLogin(loginUser, passUser);
+            return DB.Verification(loginUser, passUser);
         }
 
         static public RegisterResult Register(string userLogin, string password, string email)
@@ -63,6 +68,11 @@ namespace MediaNexus_Backend
         public static int GetMediaCountByType(MainMediaType mediaType, int mediaId)
         {
             return DB.GetMediaCountByType(mediaType, mediaId);
+        }
+
+        public static UserResponse[] GetResponsesByMediaId(int mediaId)
+        {
+            return DB.GetResponsesByMediaId(mediaId).ToArray();
         }
     }
 }

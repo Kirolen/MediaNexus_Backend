@@ -62,6 +62,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
+    <Compile Include="Response.cs" />
     <Compile Include="SortMedia.cs" />
     <Compile Include="User.cs" />
     <Compile Include="UserMediaStatus.cs" />

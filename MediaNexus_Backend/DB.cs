@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -47,30 +48,20 @@ namespace MediaNexus_Backend
             var conditions = new List<string>();
 
             if (sortCriteria.selectedTypes.Length > 0)
-            {
                 conditions.Add("mm.MainMediaType IN (" + string.Join(", ", sortCriteria.selectedTypes.Select(t => $"'{t}'")) + ")");
-            }
 
             if (sortCriteria.selectedGenres.Length > 0)
-            {
                 conditions.Add("mg.GenreID IN (" + string.Join(", ", sortCriteria.selectedGenres.Select(g => g.GenreID)) + ")");
-            }
 
             if (sortCriteria.selectedMediaStatus.Length > 0)
-            {
                 conditions.Add("mm.MediaStatus IN (" + string.Join(", ", sortCriteria.selectedMediaStatus.Select(s => $"'{s}'")) + ")");
-            }
 
             if (sortCriteria.selectedStatus.Length > 0)
-            {
                 conditions.Add("ums.Status IN (" + string.Join(", ", sortCriteria.selectedStatus.Select(s => $"'{s}'")) + ")");
-            }
 
             if (conditions.Count > 0)
-            {
                 queryBuilder.Append("WHERE ");
                 queryBuilder.Append(string.Join(" AND ", conditions));
-            }
 
             string query = queryBuilder.ToString();
             Console.WriteLine(query);
@@ -108,26 +99,17 @@ namespace MediaNexus_Backend
             var conditions = new List<string>();
 
             if (sortCriteria.selectedTypes.Length > 0)
-            {
                 conditions.Add("mm.MainMediaType IN (" + string.Join(", ", sortCriteria.selectedTypes.Select(t => $"'{t}'")) + ")");
-            }
 
             if (sortCriteria.selectedGenres.Length > 0)
-            {
                 conditions.Add("mg.GenreID IN (" + string.Join(", ", sortCriteria.selectedGenres.Select(g => g.GenreID)) + ")");
-            }
+            
 
             if (sortCriteria.selectedMediaStatus.Length > 0)
-            {
                 conditions.Add("mm.MediaStatus IN (" + string.Join(", ", sortCriteria.selectedMediaStatus.Select(s => $"'{s}'")) + ")");
-            }
 
             if (sortCriteria.selectedStatus.Length > 0)
-            {
                 conditions.Add("ums.Status IN (" + string.Join(", ", sortCriteria.selectedStatus.Select(s => $"'{s}'")) + ")");
-            }
-
-
 
             if (conditions.Count > 0)
             {
@@ -139,7 +121,7 @@ namespace MediaNexus_Backend
             queryBuilder.Append("LIMIT @total OFFSET @offset");
 
             string query = queryBuilder.ToString();
-            Console.WriteLine(query); // Виводимо запит для налагодження
+            Console.WriteLine(query);
             List<MainMedia> mediaList = new List<MainMedia>();
 
             try
@@ -181,20 +163,6 @@ namespace MediaNexus_Backend
             return mediaList.ToArray();
         }
 
-        public static DataTable GetAllMedia()
-        {
-            using (MySqlConnection connection = new MySqlConnection(connectionString))
-            {
-                ConnectionOpen(connection);
-                string query = "SELECT * FROM MainMedia";
-                MySqlCommand cmd = new MySqlCommand(query, connection);
-                MySqlDataAdapter adapter = new MySqlDataAdapter(cmd);
-                DataTable table = new DataTable();
-                adapter.Fill(table);
-                ConnectionClose(connection);
-                return table;
-            }
-        }
         public static Media GetMedia(int id)
         {
             string query = @"SELECT * 
@@ -255,7 +223,7 @@ namespace MediaNexus_Backend
             return null; 
         }
 
-        public static User CheckLogin(string loginUser, string passUser)
+        public static User Verification(string loginUser, string passUser)
         {
             string hashedPassword = ComputeSha256Hash(passUser);
 
@@ -285,13 +253,21 @@ namespace MediaNexus_Backend
                         Role = (UserRole)Enum.Parse(typeof(UserRole), row["Role"].ToString()),
                         Nickname = row.IsNull("nickname") ? null : row["nickname"].ToString(),
                         RegisterDate = Convert.ToDateTime(row["registerDate"]),
-                        LastLoginDate = row.IsNull("lastLoginDate") ? (DateTime?)null : Convert.ToDateTime(row["lastLoginDate"]),
+                        LastLoginDate = DateTime.Now,
                         IsBanned = Convert.ToBoolean(row["isBanned"]),
                         DateEndBan = row.IsNull("dateEndBan") ? (DateTime?)null : Convert.ToDateTime(row["dateEndBan"]),
                         Email = row["email"].ToString(),
                         BirthdayDate = row.IsNull("birthdayDate") ? (DateTime?)null : Convert.ToDateTime(row["birthdayDate"]),
                         UserDescription = row.IsNull("userDescription") ? null : row["userDescription"].ToString()
                     };
+
+                    string updateQuery = "UPDATE `users` SET `lastLoginDate` = @lastLoginDate WHERE `id` = @userId";
+                    using (MySqlCommand updateCommand = new MySqlCommand(updateQuery, connection))
+                    {
+                        updateCommand.Parameters.AddWithValue("@lastLoginDate", DateTime.Now);
+                        updateCommand.Parameters.AddWithValue("@userId", user.Id);
+                        updateCommand.ExecuteNonQuery();
+                    }
 
                     ConnectionClose(connection);
                     return user;
@@ -309,11 +285,11 @@ namespace MediaNexus_Backend
                 using (MySqlConnection connection = new MySqlConnection(connectionString))
                 {
                     ConnectionOpen(connection);
-
+                    string email = IsEmailTaken(user.Email) ? " " : ", email = @newEmail ";
                     string query = @"UPDATE users 
-                             SET hashPassword = @newPassword, nickname = @newNickname, email = @newEmail,
-                                 userDescription = @newDescription, birthdayDate = @newBirthday, userImageURL = @newImage
-                             WHERE id = @userId";
+                             SET userImageURL = @newImage, hashPassword = @newPassword, nickname = @newNickname,
+                             userDescription = @newDescription, birthdayDate = @newBirthday" + email +
+                             "WHERE id = @userId";
 
                     using (MySqlCommand command = new MySqlCommand(query, connection))
                     {
@@ -337,56 +313,6 @@ namespace MediaNexus_Backend
                 return false; 
             }
 
-        }
-
-        private static string CheckPassword(int id, string currentPassword, string newPassword)
-        {
-            string currentPasswordHash = ComputeSha256Hash(currentPassword);
-
-            if (currentPasswordHash == GetPasswordHashByUserid(id))
-            {
-                return ComputeSha256Hash(newPassword);
-            }
-            else
-            {
-                return currentPasswordHash;
-            }
-        }
-
-        public static RegisterResult Register(string userLogin, string password, string email)
-        {
-            string passwordHash = ComputeSha256Hash(password);
-
-            try
-            {
-                using (MySqlConnection connection = new MySqlConnection(connectionString))
-                {
-                    ConnectionOpen(connection);
-
-                    string query = @"INSERT INTO `users` 
-                             (`username`, `hashPassword`, `email`, `registerDate`, `role`, `nickname`) 
-                             VALUES (@username, @passwordHash, @email, @registerDate, @role, @nickname)";
-
-                    using (MySqlCommand command = new MySqlCommand(query, connection))
-                    {
-                        command.Parameters.AddWithValue("@username", userLogin);
-                        command.Parameters.AddWithValue("@passwordHash", passwordHash);
-                        command.Parameters.AddWithValue("@email", email);
-                        command.Parameters.AddWithValue("@registerDate", DateTime.Now);
-                        command.Parameters.AddWithValue("@role", "User");
-                        command.Parameters.AddWithValue("@nickname", userLogin); 
-
-                        int result = command.ExecuteNonQuery();
-                        ConnectionClose(connection);
-                        return result > 0 ? RegisterResult.Success : RegisterResult.RegistrationFailed;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error occurred during registration: {ex.Message}");
-                return RegisterResult.Error;
-            }
         }
         public static string GetPasswordHashByUserid(int userID)
         {
@@ -420,8 +346,131 @@ namespace MediaNexus_Backend
                 Console.WriteLine($"Error occurred while retrieving password hash: {ex.Message}");
             }
 
-            return null; 
+            return null;
         }
+        private static string CheckPassword(int id, string currentPassword, string newPassword)
+        {
+            string currentPasswordHash = ComputeSha256Hash(currentPassword);
+            string password = GetPasswordHashByUserid(id);
+
+            if (currentPasswordHash == password)
+            {
+                return ComputeSha256Hash(newPassword);
+            }
+            else
+            {
+                return password;
+            }
+        }
+
+        public static RegisterResult Register(string userLogin, string password, string email)
+        {
+            if (IsEmailTaken(email)) return RegisterResult.EmailTaken;
+            if (IsUserLoginTaken(userLogin)) return RegisterResult.UserLoginTaken;
+
+            string passwordHash = ComputeSha256Hash(password);
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    ConnectionOpen(connection);
+
+                    string query = @"INSERT INTO `users` 
+                             (`username`, `hashPassword`, `email`, `registerDate`, `role`, `nickname`) 
+                             VALUES (@username, @passwordHash, @email, @registerDate, @role, @nickname)";
+
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@username", userLogin);
+                        command.Parameters.AddWithValue("@passwordHash", passwordHash);
+                        command.Parameters.AddWithValue("@email", email);
+                        command.Parameters.AddWithValue("@registerDate", DateTime.Now);
+                        command.Parameters.AddWithValue("@role", "User");
+                        command.Parameters.AddWithValue("@nickname", userLogin); 
+
+                        int result = command.ExecuteNonQuery();
+                        ConnectionClose(connection);
+                        return result > 0 ? RegisterResult.Success : RegisterResult.RegistrationFailed;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error occurred during registration: {ex.Message}");
+                return RegisterResult.Error;
+            }
+        }
+
+        public static bool AddUserResponseToDatabase(UserResponse response)
+        {
+            string query = @"INSERT INTO UserResponses (userID, mediaID, ResponseText, ResponseType)
+                     VALUES (@userID, @mediaID, @responseText, @responseType)";
+
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(connectionString))
+                {
+                    ConnectionOpen(connection);
+                    using (MySqlCommand command = new MySqlCommand(query, connection))
+                    {
+                        command.Parameters.AddWithValue("@userID", response.UserID);
+                        command.Parameters.AddWithValue("@mediaID", response.MediaID);
+                        command.Parameters.AddWithValue("@responseText", response.ResponseText);
+                        command.Parameters.AddWithValue("@responseType", response.ResponseType.ToString());
+
+                        int result = command.ExecuteNonQuery();
+                        ConnectionClose(connection);
+                        return result > 0;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding response to database: {ex.Message}");
+                return false;
+            }
+        }
+        public static List<UserResponse> GetResponsesByMediaId(int mediaId)
+        {
+            List<UserResponse> responses = new List<UserResponse>();
+
+            string query = @"
+    SELECT ur.UserID, ur.ResponseID, ur.MediaID, ur.ResponseText, ur.ResponseType, 
+           u.nickname AS UserNickname, u.userImageURL AS UserImgUrl
+    FROM UserResponses ur
+    JOIN users u ON ur.UserID = u.id
+    WHERE ur.MediaID = @mediaId";
+
+            using (MySqlConnection connection = new MySqlConnection(connectionString))
+            {
+                connection.Open();
+                using (MySqlCommand command = new MySqlCommand(query, connection))
+                {
+                    command.Parameters.AddWithValue("@mediaId", mediaId);
+
+                    using (MySqlDataReader reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            UserResponse response = new UserResponse(
+                                userID: reader.GetInt32("UserID"),
+                                responseID: reader.GetInt32("ResponseID"),
+                                mediaID: reader.GetInt32("MediaID"),
+                                responseText: reader.GetString("ResponseText"),
+                                responseType: (ResponseType)Enum.Parse(typeof(ResponseType), reader.GetString("ResponseType")),
+                                userNickname: reader.GetString("UserNickname"),
+                                userIMGURL: reader.IsDBNull(reader.GetOrdinal("UserImgUrl")) ? null : reader.GetString("UserImgUrl")
+                            );
+
+                            responses.Add(response);
+                        }
+                    }
+                }
+            }
+            return responses;
+        }
+
 
         private static bool IsUserLoginTaken(string userLogin)
         {
@@ -452,6 +501,7 @@ namespace MediaNexus_Backend
             }
         }
 
+        [DebuggerStepThrough]
         private static string ComputeSha256Hash(string rawData)
         {
             using (SHA256 sha256Hash = SHA256.Create())
@@ -735,7 +785,7 @@ namespace MediaNexus_Backend
                             using (MySqlCommand commandInsert = new MySqlCommand(queryInsert, connection))
                             {
                                 commandInsert.Parameters.AddWithValue("@userId", userMediaStatus.UserID);
-                                commandInsert.Parameters.AddWithValue("@mediaId", userMediaStatus.UserID);
+                                commandInsert.Parameters.AddWithValue("@mediaId", userMediaStatus.MediaID);
                                 commandInsert.Parameters.AddWithValue("@status", userMediaStatus.Status.ToString());
                                 commandInsert.Parameters.AddWithValue("@endedPageOrEpisode", userMediaStatus.EndedPageOrEpisode);
 
@@ -748,7 +798,7 @@ namespace MediaNexus_Backend
                             using (MySqlCommand commandUpdate = new MySqlCommand(queryUpdate, connection))
                             {
                                 commandUpdate.Parameters.AddWithValue("@userId", userMediaStatus.UserID);
-                                commandUpdate.Parameters.AddWithValue("@mediaId", userMediaStatus.UserID);
+                                commandUpdate.Parameters.AddWithValue("@mediaId", userMediaStatus.MediaID);
                                 commandUpdate.Parameters.AddWithValue("@status", userMediaStatus.Status.ToString());
                                 commandUpdate.Parameters.AddWithValue("@endedPageOrEpisode", userMediaStatus.EndedPageOrEpisode);
 

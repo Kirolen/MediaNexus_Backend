@@ -18,11 +18,20 @@ namespace MediaNexus_Backend
         RegistrationFailed,
         Error
     }
-
+    /// <summary>
+    /// Provides methods for database operations related to media management.
+    /// </summary>
     internal static class DB
     {
+        /// <summary>
+        /// The connection string for the database.
+        /// </summary>
         private static readonly string connectionString = "Server=localhost;Database=MediaNexus;User ID=root;Password=my-secret-pw;";
 
+        /// <summary>
+        /// Opens the specified database connection if it is closed.
+        /// </summary>
+        /// <param name="connection">The database connection to open.</param>
         public static void ConnectionOpen(MySqlConnection connection)
         {
             if (connection.State == ConnectionState.Closed)
@@ -31,6 +40,10 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Closes the specified database connection if it is open.
+        /// </summary>
+        /// <param name="connection">The database connection to close.</param>
         public static void ConnectionClose(MySqlConnection connection)
         {
             if (connection.State == ConnectionState.Open)
@@ -39,7 +52,12 @@ namespace MediaNexus_Backend
             }
         }
 
-        public static int CountFilteredMedia(SortMedia sortCriteria)
+        /// <summary>
+        /// Counts the number of filtered media based on the specified sorting criteria.
+        /// </summary>
+        /// <param name="sortCriteria">The criteria used to filter media.</param>
+        /// <returns>The total count of filtered media.</returns>
+        public static int CountFilteredMedia(SortConditions sortCriteria)
         {
             var queryBuilder = new StringBuilder("SELECT COUNT(DISTINCT mm.id) FROM MainMedia mm ");
             queryBuilder.Append("LEFT JOIN MediaGenres mg ON mm.id = mg.MediaID ");
@@ -88,7 +106,14 @@ namespace MediaNexus_Backend
             return total;
         }
 
-        public static MainMedia[] GetFilteredMedia(SortMedia sortCriteria, int numMedia, int page)
+        /// <summary>
+        /// Retrieves filtered media based on the specified sorting criteria and pagination settings.
+        /// </summary>
+        /// <param name="sortCriteria">The criteria used to filter media.</param>
+        /// <param name="numMedia">The number of media items to retrieve.</param>
+        /// <param name="page">The page number for pagination.</param>
+        /// <returns>An array of filtered media items.</returns>
+        public static MainMedia[] GetFilteredMedia(SortConditions sortCriteria, int numMedia, int page)
         {
             int offset = (page - 1) * numMedia;
 
@@ -163,6 +188,11 @@ namespace MediaNexus_Backend
             return mediaList.ToArray();
         }
 
+        /// <summary>
+        /// Retrieves a specific media item by its identifier.
+        /// </summary>
+        /// <param name="id">The unique identifier of the media to retrieve.</param>
+        /// <returns>The media item if found; otherwise, null.</returns>
         public static Media GetMedia(int id)
         {
             string query = @"SELECT * 
@@ -220,9 +250,17 @@ namespace MediaNexus_Backend
                 Console.WriteLine($"An error occurred while fetching media: {ex.Message}");
             }
 
-            return null; 
+            return null;
         }
 
+        /// <summary>
+        /// Verifies the user's credentials by checking the provided username and password against the database.
+        /// </summary>
+        /// <param name="loginUser">The username of the user attempting to log in.</param>
+        /// <param name="passUser">The password of the user attempting to log in.</param>
+        /// <returns>
+        /// A <see cref="User"/> object if the credentials are valid; otherwise, a new <see cref="User"/> object with default values.
+        /// </returns>
         public static User Verification(string loginUser, string passUser)
         {
             string hashedPassword = ComputeSha256Hash(passUser);
@@ -277,6 +315,15 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Changes the user's information, including updating the password if the current password is verified.
+        /// </summary>
+        /// <param name="user">The <see cref="User"/> object containing the updated user information.</param>
+        /// <param name="currentPasword">The user's current password for verification.</param>
+        /// <param name="newPassword">The new password to set for the user.</param>
+        /// <returns>
+        /// True if the user information was successfully updated; otherwise, false.
+        /// </returns>
         public static bool ChangeUserInfo(User user, string currentPasword, string newPassword)
         {
             user.HashPassword = CheckPassword(user.Id, currentPasword, newPassword);
@@ -303,17 +350,25 @@ namespace MediaNexus_Backend
 
                         int result = command.ExecuteNonQuery();
 
-                        return result > 0; 
+                        return result > 0;
                     }
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error occurred while updating user info: {ex.Message}");
-                return false; 
+                return false;
             }
 
         }
+
+        /// <summary>
+        /// Retrieves the password hash of a user based on their unique identifier.
+        /// </summary>
+        /// <param name="userID">The unique identifier of the user.</param>
+        /// <returns>
+        /// The hashed password of the user if found; otherwise, null.
+        /// </returns>
         public static string GetPasswordHashByUserid(int userID)
         {
             try
@@ -348,6 +403,16 @@ namespace MediaNexus_Backend
 
             return null;
         }
+
+        /// <summary>
+        /// Checks the provided password against the stored hash to determine if the current password is correct, and updates the password if valid.
+        /// </summary>
+        /// <param name="id">The unique identifier of the user.</param>
+        /// <param name="currentPassword">The user's current password.</param>
+        /// <param name="newPassword">The new password to be set.</param>
+        /// <returns>
+        /// The new password hash if the current password is valid; otherwise, the existing password hash.
+        /// </returns>
         private static string CheckPassword(int id, string currentPassword, string newPassword)
         {
             string currentPasswordHash = ComputeSha256Hash(currentPassword);
@@ -363,6 +428,15 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Registers a new user in the system by storing their login, password, and email in the database.
+        /// </summary>
+        /// <param name="userLogin">The username of the user registering.</param>
+        /// <param name="password">The password for the user account.</param>
+        /// <param name="email">The email address of the user.</param>
+        /// <returns>
+        /// A <see cref="RegisterResult"/> indicating the outcome of the registration process.
+        /// </returns>
         public static RegisterResult Register(string userLogin, string password, string email)
         {
             if (IsEmailTaken(email)) return RegisterResult.EmailTaken;
@@ -402,6 +476,13 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Adds a user response to the database for a specific media item.
+        /// </summary>
+        /// <param name="response">The <see cref="UserResponse"/> object containing the response details.</param>
+        /// <returns>
+        /// True if the response was successfully added; otherwise, false.
+        /// </returns>
         public static bool AddUserResponseToDatabase(UserResponse response)
         {
             string query = @"INSERT INTO UserResponses (userID, mediaID, ResponseText, ResponseType)
@@ -431,6 +512,14 @@ namespace MediaNexus_Backend
                 return false;
             }
         }
+
+        /// <summary>
+        /// Retrieves a list of user responses for a specific media item from the database.
+        /// </summary>
+        /// <param name="mediaId">The unique identifier of the media item.</param>
+        /// <returns>
+        /// A list of <see cref="UserResponse"/> objects associated with the specified media item.
+        /// </returns>
         public static List<UserResponse> GetResponsesByMediaId(int mediaId)
         {
             List<UserResponse> responses = new List<UserResponse>();
@@ -471,7 +560,13 @@ namespace MediaNexus_Backend
             return responses;
         }
 
-
+        /// <summary>
+        /// Checks if the specified username is already taken in the database.
+        /// </summary>
+        /// <param name="userLogin">The username to check for availability.</param>
+        /// <returns>
+        /// True if the username is taken; otherwise, false.
+        /// </returns>
         private static bool IsUserLoginTaken(string userLogin)
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -486,6 +581,14 @@ namespace MediaNexus_Backend
                 return count > 0;
             }
         }
+
+        /// <summary>
+        /// Checks if the specified email is already associated with an account in the database.
+        /// </summary>
+        /// <param name="email">The email address to check for availability.</param>
+        /// <returns>
+        /// True if the email is already taken; otherwise, false.
+        /// </returns>
         private static bool IsEmailTaken(string email)
         {
             using (MySqlConnection connection = new MySqlConnection(connectionString))
@@ -501,6 +604,13 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Computes the SHA256 hash of the provided raw data.
+        /// </summary>
+        /// <param name="rawData">The raw data to be hashed.</param>
+        /// <returns>
+        /// A hexadecimal string representation of the SHA256 hash.
+        /// </returns>
         [DebuggerStepThrough]
         private static string ComputeSha256Hash(string rawData)
         {
@@ -516,6 +626,14 @@ namespace MediaNexus_Backend
             }
         }
 
+        /// <summary>
+        /// Adds a new media entry to the database, including its associated genres.
+        /// </summary>
+        /// <param name="newMedia">The media object containing the information to be added.</param>
+        /// <param name="genres">An array of genres associated with the media.</param>
+        /// <returns>
+        /// True if the media was added successfully; otherwise, false.
+        /// </returns>
         public static bool AddMediaToDatabase(Media newMedia, Genres[] genres)
         {
             using (var connection = new MySqlConnection(connectionString))
@@ -530,7 +648,7 @@ namespace MediaNexus_Backend
 
                     using (var command = new MySqlCommand(mainMediaQuery, connection))
                     {
-                        command.Parameters.AddWithValue("@MainType", (MainMediaType)(newMedia.MainType+1));
+                        command.Parameters.AddWithValue("@MainType", (MainMediaType)(newMedia.MainType + 1));
                         command.Parameters.AddWithValue("@OriginalName", newMedia.OriginalName);
                         command.Parameters.AddWithValue("@EnglishName", newMedia.EnglishName);
                         command.Parameters.AddWithValue("@ImageURL", newMedia.ImageURL);
@@ -582,6 +700,15 @@ namespace MediaNexus_Backend
                 }
             }
         }
+
+        /// <summary>
+        /// Adds a new book entry to the database, including its associated genres.
+        /// </summary>
+        /// <param name="newBook">The book object containing the information to be added.</param>
+        /// <param name="genres">An array of genres associated with the book.</param>
+        /// <returns>
+        /// True if the book was added successfully; otherwise, false.
+        /// </returns>
         public static bool AddBookToDatabase(Book newBook, Genres[] genres)
         {
             using (var connection = new MySqlConnection(connectionString))
@@ -643,6 +770,15 @@ namespace MediaNexus_Backend
                 }
             }
         }
+
+        /// <summary>
+        /// Adds connections between media items and their associated genres to the database.
+        /// </summary>
+        /// <param name="mediaID">The ID of the media item to associate with genres.</param>
+        /// <param name="genres">An array of genres to associate with the media item.</param>
+        /// <returns>
+        /// True if the associations were added successfully; otherwise, false.
+        /// </returns>
         private static bool AddConnectionBetweenMedia(long mediaID, Genres[] genres)
         {
             if (genres == null || genres.Length == 0)
@@ -681,6 +817,13 @@ namespace MediaNexus_Backend
                 }
             }
         }
+
+        /// <summary>
+        /// Retrieves all genres from the database.
+        /// </summary>
+        /// <returns>
+        /// An array of <see cref="Genres"/> objects containing the available genres.
+        /// </returns>
         public static Genres[] GetGenres()
         {
             List<Genres> genresList = new List<Genres>();
@@ -713,7 +856,17 @@ namespace MediaNexus_Backend
 
             return genresList.ToArray(); 
         }
-       
+
+
+        /// <summary>
+        /// Retrieves the media status for a specific user and media item.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="mediaId">The ID of the media item.</param>
+        /// <returns>
+        /// An instance of <see cref="UserMediaStatus"/> containing the user's media status, 
+        /// or null if no status exists for the user and media item.
+        /// </returns>
         public static UserMediaStatus GetUserMediaStatus(int userId, int mediaId)
         {
             string query = @"SELECT MediaID, UserID, Status, EndedPageOrEpisode
@@ -756,6 +909,11 @@ namespace MediaNexus_Backend
             return userMediaStatus;
         }
 
+
+        /// <summary>
+        /// Adds a new user media status or updates an existing one in the database.
+        /// </summary>
+        /// <param name="userMediaStatus">The <see cref="UserMediaStatus"/> object containing the status to be added or updated.</param>
         public static void AddOrUpdateUserMediaStatus(UserMediaStatus userMediaStatus)
         {
             string queryCheck = @"SELECT COUNT(*) FROM UserMediaStatus WHERE UserID = @userId AND MediaID = @mediaId";
@@ -817,6 +975,15 @@ namespace MediaNexus_Backend
             }
         }
 
+
+        /// <summary>
+        /// Retrieves the count of pages or episodes for a specific media type.
+        /// </summary>
+        /// <param name="mediaType">The type of media (e.g., Book or Media).</param>
+        /// <param name="mediaId">The ID of the media item.</param>
+        /// <returns>
+        /// The count of pages or episodes for the specified media type, or 0 if not found or if an error occurs.
+        /// </returns>
         public static int GetMediaCountByType(MainMediaType mediaType, int mediaId)
         {
             using (var connection = new MySqlConnection(connectionString))

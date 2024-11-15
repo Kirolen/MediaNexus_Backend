@@ -1,0 +1,955 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>MediaNexus_Backend</name>
+    </assembly>
+    <members>
+        <member name="T:MediaNexus_Backend.Book">
+            <summary>
+            Represents a book in the Media Nexus application.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Book.Author">
+            <summary>
+            Gets or sets the author of the book.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Book.PublicationDate">
+            <summary>
+            Gets or sets the publication date of the book.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Book.Pages">
+            <summary>
+            Gets or sets the number of pages in the book.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Book.ISBN">
+            <summary>
+            Gets or sets the ISBN (International Standard Book Number) of the book.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.Book.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.Book"/> class.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.Book.#ctor(System.Int32,MediaNexus_Backend.MainMediaType,System.String,System.String,System.String,MediaNexus_Backend.MediaStatus,MediaNexus_Backend.PG_Rating,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},System.String,System.DateTime,System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.Book"/> class with the specified details.
+            </summary>
+            <param name="mediaId">The unique identifier for the media.</param>
+            <param name="type">The main media type.</param>
+            <param name="originalName">The original name of the book.</param>
+            <param name="englishName">The English name of the book.</param>
+            <param name="imageUrl">The URL of the book's image.</param>
+            <param name="status">The status of the book.</param>
+            <param name="pgRating">The PG rating of the book.</param>
+            <param name="description">The description of the book.</param>
+            <param name="idUserWhoAdded">The ID of the user who added the book.</param>
+            <param name="timeAdded">The time the book was added.</param>
+            <param name="author">The author of the book.</param>
+            <param name="publicationDate">The publication date of the book.</param>
+            <param name="pages">The number of pages in the book.</param>
+            <param name="isbn">The ISBN of the book.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.Book.ToString">
+            <summary>
+            Returns a string that represents the current book.
+            </summary>
+            <returns>A string containing details about the book.</returns>
+        </member>
+        <member name="T:MediaNexus_Backend.DB">
+            <summary>
+            Provides methods for database operations related to media management.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.DB.connectionString">
+            <summary>
+            The connection string for the database.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.ConnectionOpen(MySql.Data.MySqlClient.MySqlConnection)">
+            <summary>
+            Opens the specified database connection if it is closed.
+            </summary>
+            <param name="connection">The database connection to open.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.ConnectionClose(MySql.Data.MySqlClient.MySqlConnection)">
+            <summary>
+            Closes the specified database connection if it is open.
+            </summary>
+            <param name="connection">The database connection to close.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.CountFilteredMedia(MediaNexus_Backend.SortConditions)">
+            <summary>
+            Counts the number of filtered media based on the specified sorting criteria.
+            </summary>
+            <param name="sortCriteria">The criteria used to filter media.</param>
+            <returns>The total count of filtered media.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetFilteredMedia(MediaNexus_Backend.SortConditions,System.Int32,System.Int32)">
+            <summary>
+            Retrieves filtered media based on the specified sorting criteria and pagination settings.
+            </summary>
+            <param name="sortCriteria">The criteria used to filter media.</param>
+            <param name="numMedia">The number of media items to retrieve.</param>
+            <param name="page">The page number for pagination.</param>
+            <returns>An array of filtered media items.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetMedia(System.Int32)">
+            <summary>
+            Retrieves a specific media item by its identifier.
+            </summary>
+            <param name="id">The unique identifier of the media to retrieve.</param>
+            <returns>The media item if found; otherwise, null.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.Verification(System.String,System.String)">
+            <summary>
+            Verifies the user's credentials by checking the provided username and password against the database.
+            </summary>
+            <param name="loginUser">The username of the user attempting to log in.</param>
+            <param name="passUser">The password of the user attempting to log in.</param>
+            <returns>
+            A <see cref="T:MediaNexus_Backend.User"/> object if the credentials are valid; otherwise, a new <see cref="T:MediaNexus_Backend.User"/> object with default values.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.ChangeUserInfo(MediaNexus_Backend.User,System.String,System.String)">
+            <summary>
+            Changes the user's information, including updating the password if the current password is verified.
+            </summary>
+            <param name="user">The <see cref="T:MediaNexus_Backend.User"/> object containing the updated user information.</param>
+            <param name="currentPasword">The user's current password for verification.</param>
+            <param name="newPassword">The new password to set for the user.</param>
+            <returns>
+            True if the user information was successfully updated; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetPasswordHashByUserid(System.Int32)">
+            <summary>
+            Retrieves the password hash of a user based on their unique identifier.
+            </summary>
+            <param name="userID">The unique identifier of the user.</param>
+            <returns>
+            The hashed password of the user if found; otherwise, null.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.CheckPassword(System.Int32,System.String,System.String)">
+            <summary>
+            Checks the provided password against the stored hash to determine if the current password is correct, and updates the password if valid.
+            </summary>
+            <param name="id">The unique identifier of the user.</param>
+            <param name="currentPassword">The user's current password.</param>
+            <param name="newPassword">The new password to be set.</param>
+            <returns>
+            The new password hash if the current password is valid; otherwise, the existing password hash.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.Register(System.String,System.String,System.String)">
+            <summary>
+            Registers a new user in the system by storing their login, password, and email in the database.
+            </summary>
+            <param name="userLogin">The username of the user registering.</param>
+            <param name="password">The password for the user account.</param>
+            <param name="email">The email address of the user.</param>
+            <returns>
+            A <see cref="T:MediaNexus_Backend.RegisterResult"/> indicating the outcome of the registration process.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.AddUserResponseToDatabase(MediaNexus_Backend.UserResponse)">
+            <summary>
+            Adds a user response to the database for a specific media item.
+            </summary>
+            <param name="response">The <see cref="T:MediaNexus_Backend.UserResponse"/> object containing the response details.</param>
+            <returns>
+            True if the response was successfully added; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetResponsesByMediaId(System.Int32)">
+            <summary>
+            Retrieves a list of user responses for a specific media item from the database.
+            </summary>
+            <param name="mediaId">The unique identifier of the media item.</param>
+            <returns>
+            A list of <see cref="T:MediaNexus_Backend.UserResponse"/> objects associated with the specified media item.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.IsUserLoginTaken(System.String)">
+            <summary>
+            Checks if the specified username is already taken in the database.
+            </summary>
+            <param name="userLogin">The username to check for availability.</param>
+            <returns>
+            True if the username is taken; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.IsEmailTaken(System.String)">
+            <summary>
+            Checks if the specified email is already associated with an account in the database.
+            </summary>
+            <param name="email">The email address to check for availability.</param>
+            <returns>
+            True if the email is already taken; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.ComputeSha256Hash(System.String)">
+            <summary>
+            Computes the SHA256 hash of the provided raw data.
+            </summary>
+            <param name="rawData">The raw data to be hashed.</param>
+            <returns>
+            A hexadecimal string representation of the SHA256 hash.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.AddMediaToDatabase(MediaNexus_Backend.Media,MediaNexus_Backend.Genres[])">
+            <summary>
+            Adds a new media entry to the database, including its associated genres.
+            </summary>
+            <param name="newMedia">The media object containing the information to be added.</param>
+            <param name="genres">An array of genres associated with the media.</param>
+            <returns>
+            True if the media was added successfully; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.AddBookToDatabase(MediaNexus_Backend.Book,MediaNexus_Backend.Genres[])">
+            <summary>
+            Adds a new book entry to the database, including its associated genres.
+            </summary>
+            <param name="newBook">The book object containing the information to be added.</param>
+            <param name="genres">An array of genres associated with the book.</param>
+            <returns>
+            True if the book was added successfully; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.AddConnectionBetweenMedia(System.Int64,MediaNexus_Backend.Genres[])">
+            <summary>
+            Adds connections between media items and their associated genres to the database.
+            </summary>
+            <param name="mediaID">The ID of the media item to associate with genres.</param>
+            <param name="genres">An array of genres to associate with the media item.</param>
+            <returns>
+            True if the associations were added successfully; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetGenres">
+            <summary>
+            Retrieves all genres from the database.
+            </summary>
+            <returns>
+            An array of <see cref="T:MediaNexus_Backend.Genres"/> objects containing the available genres.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetUserMediaStatus(System.Int32,System.Int32)">
+            <summary>
+            Retrieves the media status for a specific user and media item.
+            </summary>
+            <param name="userId">The ID of the user.</param>
+            <param name="mediaId">The ID of the media item.</param>
+            <returns>
+            An instance of <see cref="T:MediaNexus_Backend.UserMediaStatus"/> containing the user's media status, 
+            or null if no status exists for the user and media item.
+            </returns>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.AddOrUpdateUserMediaStatus(MediaNexus_Backend.UserMediaStatus)">
+            <summary>
+            Adds a new user media status or updates an existing one in the database.
+            </summary>
+            <param name="userMediaStatus">The <see cref="T:MediaNexus_Backend.UserMediaStatus"/> object containing the status to be added or updated.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.DB.GetMediaCountByType(MediaNexus_Backend.MainMediaType,System.Int32)">
+            <summary>
+            Retrieves the count of pages or episodes for a specific media type.
+            </summary>
+            <param name="mediaType">The type of media (e.g., Book or Media).</param>
+            <param name="mediaId">The ID of the media item.</param>
+            <returns>
+            The count of pages or episodes for the specified media type, or 0 if not found or if an error occurs.
+            </returns>
+        </member>
+        <member name="T:MediaNexus_Backend.Genres">
+            <summary>
+            Represents a genre of media in the Media Nexus application.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Genres.GenreID">
+            <summary>
+            Gets or sets the unique identifier for the genre.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Genres.GenreName">
+            <summary>
+            Gets or sets the name of the genre.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.Genres.#ctor(System.Int32,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.Genres"/> class with the specified genre ID and name.
+            </summary>
+            <param name="genreID">The unique identifier for the genre.</param>
+            <param name="genreName">The name of the genre.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.Genres.ToString">
+            <summary>
+            Returns a string that represents the current genre.
+            </summary>
+            <returns>The name of the genre.</returns>
+        </member>
+        <member name="T:MediaNexus_Backend.MainMedia">
+            <summary>
+            Represents the main media entity in the application.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.Id">
+            <summary>
+            Gets or sets the unique identifier for the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.MainType">
+            <summary>
+            Gets or sets the main type of the media (e.g., Book, Media, Game, Comics).
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.OriginalName">
+            <summary>
+            Gets or sets the original name of the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.EnglishName">
+            <summary>
+            Gets or sets the English name of the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.ImageURL">
+            <summary>
+            Gets or sets the URL of the media's image.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.Status">
+            <summary>
+            Gets or sets the current status of the media (e.g., Released, Ongoing).
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.PG_Rating">
+            <summary>
+            Gets or sets the parental guidance rating of the media (e.g., G, PG, R).
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.Description">
+            <summary>
+            Gets or sets the description of the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.IsAdded">
+            <summary>
+            Gets or sets a value indicating whether the media has been added to a user's list.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.IDUserWhoAdded">
+            <summary>
+            Gets or sets the user ID of the user who added the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.MainMedia.TimeAdded">
+            <summary>
+            Gets or sets the date and time when the media was added.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.MainMedia.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.MainMedia"/> class.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.MainMedia.#ctor(System.Int32,MediaNexus_Backend.MainMediaType,System.String,System.String,System.String,MediaNexus_Backend.MediaStatus,MediaNexus_Backend.PG_Rating,System.String,System.Nullable{System.Boolean},System.Nullable{System.Int32},System.Nullable{System.DateTime})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.MainMedia"/> class with specified values.
+            </summary>
+            <param name="id">The unique identifier for the media.</param>
+            <param name="type">The main type of the media.</param>
+            <param name="originalName">The original name of the media.</param>
+            <param name="englishName">The English name of the media.</param>
+            <param name="imageUrl">The URL of the media's image.</param>
+            <param name="status">The current status of the media.</param>
+            <param name="pgRating">The parental guidance rating of the media.</param>
+            <param name="description">The description of the media.</param>
+            <param name="isAdded">Indicates whether the media has been added.</param>
+            <param name="idUserWhoAdded">The user ID of the user who added the media.</param>
+            <param name="timeAdded">The date and time when the media was added.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.MainMedia.ToString">
+            <summary>
+            Returns a string representation of the media.
+            </summary>
+            <returns>A string that represents the current media.</returns>
+        </member>
+        <member name="T:MediaNexus_Backend.MediaType">
+            <summary>
+            Represents a media item, which can be either a movie or a serial, 
+            and contains detailed information about the media's production and release status.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaType.Movie">
+            <summary>
+            Indicates that the media type is a movie.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaType.Serial">
+            <summary>
+            Indicates that the media type is a serial.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.Media">
+            <summary>
+            Represents a media item, inheriting from <see cref="T:MediaNexus_Backend.MainMedia"/>.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.SecondMediaType">
+            <summary>
+            Gets or sets the secondary media type (Movie or Serial).
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.Studio">
+            <summary>
+            Gets or sets the studio that produced the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.TotalEpisodes">
+            <summary>
+            Gets or sets the total number of episodes for the serial. 
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.ReleasedEpisode">
+            <summary>
+            Gets or sets the number of released episodes.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.EpisodeDuration">
+            <summary>
+            Gets or sets the duration of an episode in minutes. 
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.TimeUntilNewEpisodeInSeconds">
+            <summary>
+            Gets or sets the time until the next episode is released, in seconds. 
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.NextEpisodeDateTime">
+            <summary>
+            Gets or sets the date and time of the next episode's release.
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.StartDate">
+            <summary>
+            Gets or sets the start date of the media.
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Media.EndDate">
+            <summary>
+            Gets or sets the end date of the media.
+            Null if not applicable.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.Media"/> class.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.#ctor(System.Int32,MediaNexus_Backend.MainMediaType,System.String,System.String,System.String,MediaNexus_Backend.MediaStatus,MediaNexus_Backend.PG_Rating,System.String,System.Nullable{System.Int32},System.Nullable{System.DateTime},MediaNexus_Backend.MediaType,System.String,System.Nullable{System.Int32},System.Int32,System.Nullable{System.Int32},System.Nullable{System.Int32},System.Nullable{System.DateTime},System.Nullable{System.DateTime},System.Nullable{System.DateTime})">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.Media"/> class 
+            with the specified parameters.
+            </summary>
+            <param name="mediaId">The unique identifier of the media.</param>
+            <param name="type">The main type of the media.</param>
+            <param name="originalName">The original name of the media.</param>
+            <param name="englishName">The English name of the media.</param>
+            <param name="imageUrl">The URL of the media's image.</param>
+            <param name="status">The status of the media.</param>
+            <param name="pgRating">The age rating of the media.</param>
+            <param name="description">A description of the media.</param>
+            <param name="idUserWhoAdded">The ID of the user who added the media.</param>
+            <param name="timeAdded">The date and time when the media was added.</param>
+            <param name="type2">The secondary media type.</param>
+            <param name="studio">The studio that produced the media.</param>
+            <param name="totalEpisodes">The total number of episodes.</param>
+            <param name="releasedEpisode">The number of released episodes.</param>
+            <param name="episodeDuration">The duration of an episode.</param>
+            <param name="timeUntilNewEpisodeInSeconds">The time until the next episode is released.</param>
+            <param name="nextEpisodeDateTime">The date and time of the next episode's release.</param>
+            <param name="startDate">The start date of the media.</param>
+            <param name="endDate">The end date of the media.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.getEpisodeString">
+            <summary>
+            Returns a string representation of the episode status in the format "Released / Total".
+            </summary>
+            <returns>A string representing the number of released episodes out of the total.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.getEpisodeduration">
+            <summary>
+            Returns a string representation of the episode duration in minutes.
+            </summary>
+            <returns>A string representing the duration of the episode.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.getStatusString">
+            <summary>
+            Returns a string representation of the media status, including 
+            relevant dates if applicable.
+            </summary>
+            <returns>A string representing the current status of the media.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.getNextEpisodeDAte">
+            <summary>
+            Calculates the date of the next episode's release based on the 
+            start date and the time until the next episode.
+            </summary>
+            <returns>A string representing the date of the next episode.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.Media.ToString">
+            <summary>
+            Returns a string representation of the media object, including 
+            all relevant properties.
+            </summary>
+            <returns>A string representing the media object.</returns>
+        </member>
+        <member name="T:MediaNexus_Backend.MediaService">
+            <summary>
+            Provides methods to interact with media data and perform operations related to media and user responses.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetFilteredMedia(MediaNexus_Backend.SortConditions,System.Int32,System.Int32)">
+            <summary>
+            Retrieves an array of filtered media based on the specified sort criteria, number of media items to retrieve, and page number.
+            </summary>
+            <param name="sortCriteria">The criteria used to filter the media.</param>
+            <param name="numMedia">The number of media items to retrieve.</param>
+            <param name="page">The page number for pagination.</param>
+            <returns>An array of <see cref="T:MediaNexus_Backend.MainMedia"/> objects.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.CountFilteredMedia(MediaNexus_Backend.SortConditions)">
+            <summary>
+            Counts the total number of media items that match the specified sort criteria.
+            </summary>
+            <param name="sortCriteria">The criteria used to filter the media.</param>
+            <returns>The count of media items that match the criteria.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetUserMediaStatus(System.Int32,System.Int32)">
+            <summary>
+            Retrieves the media status for a specific user and media item.
+            </summary>
+            <param name="userId">The unique identifier of the user.</param>
+            <param name="mediaId">The unique identifier of the media item.</param>
+            <returns>A <see cref="T:MediaNexus_Backend.UserMediaStatus"/> object representing the user's media status.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.AddUserResponseToDatabase(MediaNexus_Backend.UserResponse)">
+            <summary>
+            Adds a user response to the database.
+            </summary>
+            <param name="response">The <see cref="T:MediaNexus_Backend.UserResponse"/> object to be added.</param>
+            <returns><c>true</c> if the response was added successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.CheckLogin(System.String,System.String)">
+            <summary>
+            Verifies the login credentials of a user.
+            </summary>
+            <param name="loginUser">The username of the user.</param>
+            <param name="passUser">The password of the user.</param>
+            <returns>A <see cref="T:MediaNexus_Backend.User"/> object if the login is successful; otherwise, <c>null</c>.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.Register(System.String,System.String,System.String)">
+            <summary>
+            Registers a new user with the specified login, password, and email.
+            </summary>
+            <param name="userLogin">The login of the new user.</param>
+            <param name="password">The password of the new user.</param>
+            <param name="email">The email address of the new user.</param>
+            <returns>A <see cref="T:MediaNexus_Backend.RegisterResult"/> indicating the result of the registration.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.AddMediaToDatabase(MediaNexus_Backend.Media,MediaNexus_Backend.Genres[])">
+            <summary>
+            Adds a new media item to the database along with its associated genres.
+            </summary>
+            <param name="newMedia">The <see cref="T:MediaNexus_Backend.Media"/> object to be added.</param>
+            <param name="genres">An array of <see cref="T:MediaNexus_Backend.Genres"/> representing the media genres.</param>
+            <returns><c>true</c> if the media was added successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.AddBookToDatabase(MediaNexus_Backend.Book,MediaNexus_Backend.Genres[])">
+            <summary>
+            Adds a new book to the database along with its associated genres.
+            </summary>
+            <param name="newBook">The <see cref="T:MediaNexus_Backend.Book"/> object to be added.</param>
+            <param name="genres">An array of <see cref="T:MediaNexus_Backend.Genres"/> representing the book genres.</param>
+            <returns><c>true</c> if the book was added successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetGenres">
+            <summary>
+            Retrieves an array of genres available in the database.
+            </summary>
+            <returns>An array of <see cref="T:MediaNexus_Backend.Genres"/> objects.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.ChangeUserInfo(MediaNexus_Backend.User,System.String,System.String)">
+            <summary>
+            Changes user information, including the password.
+            </summary>
+            <param name="user">The <see cref="T:MediaNexus_Backend.User"/> object containing updated user information.</param>
+            <param name="currentPasword">The current password of the user.</param>
+            <param name="newPassword">The new password for the user.</param>
+            <returns><c>true</c> if the user information was updated successfully; otherwise, <c>false</c>.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetMedia(System.Int32)">
+            <summary>
+            Retrieves a media item by its unique identifier.
+            </summary>
+            <param name="id">The unique identifier of the media item.</param>
+            <returns>A <see cref="T:MediaNexus_Backend.Media"/> object representing the media item.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.AddOrUpdateUserMediaStatus(MediaNexus_Backend.UserMediaStatus)">
+            <summary>
+            Adds or updates the user's media status in the database.
+            </summary>
+            <param name="userMediaStatus">The <see cref="T:MediaNexus_Backend.UserMediaStatus"/> object representing the user's media status.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetMediaCountByType(MediaNexus_Backend.MainMediaType,System.Int32)">
+            <summary>
+            Retrieves the count of media items of a specific type.
+            </summary>
+            <param name="mediaType">The type of media to count.</param>
+            <param name="mediaId">The unique identifier of the media.</param>
+            <returns>The count of media items of the specified type.</returns>
+        </member>
+        <member name="M:MediaNexus_Backend.MediaService.GetResponsesByMediaId(System.Int32)">
+            <summary>
+            Retrieves an array of user responses for a specific media item.
+            </summary>
+            <param name="mediaId">The unique identifier of the media item.</param>
+            <returns>An array of <see cref="T:MediaNexus_Backend.UserResponse"/> objects.</returns>
+        </member>
+        <member name="T:MediaNexus_Backend.Properties.Resources">
+            <summary>
+              Класс ресурса со строгой типизацией для поиска локализованных строк и т.д.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Properties.Resources.ResourceManager">
+            <summary>
+              Возвращает кэшированный экземпляр ResourceManager, использованный этим классом.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.Properties.Resources.Culture">
+            <summary>
+              Перезаписывает свойство CurrentUICulture текущего потока для всех
+              обращений к ресурсу с помощью этого класса ресурса со строгой типизацией.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.ResponseType">
+            <summary>
+            Represents a response made by a user to a media item.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.ResponseType.Neutral">
+            <summary>
+            Indicates a neutral response.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.ResponseType.Negative">
+            <summary>
+            Indicates a negative response.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.ResponseType.Positive">
+            <summary>
+            Indicates a positive response.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.UserResponse">
+            <summary>
+            Represents a user's response to a media item, including details about the user and their feedback.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.UserID">
+            <summary>
+            Gets or sets the unique identifier of the user who made the response.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.ResponseID">
+            <summary>
+            Gets or sets the unique identifier of the response.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.MediaID">
+            <summary>
+            Gets or sets the unique identifier of the media item the response is associated with.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.ResponseText">
+            <summary>
+            Gets or sets the text of the user's response.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.ResponseType">
+            <summary>
+            Gets or sets the type of response (e.g., Neutral, Negative, Positive).
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.UserNickname">
+            <summary>
+            Gets or sets the nickname of the user who made the response.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserResponse.UserIMGURL">
+            <summary>
+            Gets or sets the URL of the user's profile image.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.UserResponse.#ctor(System.Int32,System.Int32,System.Int32,System.String,MediaNexus_Backend.ResponseType,System.String,System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.UserResponse"/> class with specified values.
+            </summary>
+            <param name="userID">The unique identifier of the user.</param>
+            <param name="responseID">The unique identifier of the response.</param>
+            <param name="mediaID">The unique identifier of the media item.</param>
+            <param name="responseText">The text of the user's response.</param>
+            <param name="responseType">The type of response.</param>
+            <param name="userNickname">The nickname of the user.</param>
+            <param name="userIMGURL">The URL of the user's profile image.</param>
+        </member>
+        <member name="T:MediaNexus_Backend.SortConditions">
+            <summary>
+            Represents the conditions used for sorting and filtering media items in a user's list.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.selectedTypes">
+            <summary>
+            Gets or sets the selected media types for filtering.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.selectedGenres">
+            <summary>
+            Gets or sets the selected genres for filtering.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.selectedStatus">
+            <summary>
+            Gets or sets the selected statuses for filtering media items.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.selectedMediaStatus">
+            <summary>
+            Gets or sets the selected media statuses for filtering.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.Total">
+            <summary>
+            Gets or sets the total number of media items that match the filtering criteria.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.SortConditions.userID">
+            <summary>
+            Gets or sets the unique identifier of the user associated with these sorting conditions.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.SortConditions.#ctor(System.String[],MediaNexus_Backend.Genres[],System.String[],System.String[],System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.SortConditions"/> class with specified sorting conditions.
+            </summary>
+            <param name="Types">The array of selected media types.</param>
+            <param name="genres">The array of selected genres.</param>
+            <param name="status">The array of selected statuses.</param>
+            <param name="mediaStatus">The array of selected media statuses.</param>
+            <param name="userId">The unique identifier of the user.</param>
+        </member>
+        <member name="M:MediaNexus_Backend.SortConditions.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.SortConditions"/> class with default values.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.UserRole">
+            <summary>
+            Represents the different roles a user can have in the system.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.UserRole.Admin">
+            <summary>
+            User with administrative privileges.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.UserRole.Moderator">
+            <summary>
+            User with moderation privileges.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.UserRole.User">
+            <summary>
+            Regular user with standard access.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.UserRole.Guest">
+            <summary>
+            Guest user with limited access.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.User">
+            <summary>
+            Represents a user in the system with various properties related to the user's profile and status.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.Id">
+            <summary>
+            Gets or sets the unique identifier for the user.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.HashPassword">
+            <summary>
+            Gets or sets the hashed password of the user.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.UserImageURL">
+            <summary>
+            Gets or sets the URL of the user's profile image.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.Role">
+            <summary>
+            Gets or sets the role of the user in the system.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.Nickname">
+            <summary>
+            Gets or sets the user's nickname.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.RegisterDate">
+            <summary>
+            Gets or sets the date the user registered.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.LastLoginDate">
+            <summary>
+            Gets or sets the date the user last logged in.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.IsBanned">
+            <summary>
+            Gets or sets a value indicating whether the user is banned.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.DateEndBan">
+            <summary>
+            Gets or sets the date when the user's ban ends.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.Email">
+            <summary>
+            Gets or sets the user's email address.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.BirthdayDate">
+            <summary>
+            Gets or sets the user's birthday date.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.User.UserDescription">
+            <summary>
+            Gets or sets a description of the user.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.User.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.User"/> class with default values.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.User.#ctor(MediaNexus_Backend.User)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.User"/> class by copying another user.
+            </summary>
+            <param name="other">The user to copy from.</param>
+            <exception cref="T:System.ArgumentNullException">Thrown when <paramref name="other"/> is null.</exception>
+        </member>
+        <member name="M:MediaNexus_Backend.User.#ctor(System.Int32,System.String,System.String,MediaNexus_Backend.UserRole,System.String,System.DateTime,System.Nullable{System.DateTime},System.Boolean,System.Nullable{System.DateTime},System.String,System.Nullable{System.DateTime},System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.User"/> class with specified properties.
+            </summary>
+            <param name="id">The unique identifier for the user.</param>
+            <param name="hashPassword">The hashed password of the user.</param>
+            <param name="userImageURL">The URL of the user's profile image.</param>
+            <param name="role">The role of the user in the system.</param>
+            <param name="nickname">The user's nickname.</param>
+            <param name="registerDate">The date the user registered.</param>
+            <param name="lastLoginDate">The date the user last logged in.</param>
+            <param name="isBanned">Indicates whether the user is banned.</param>
+            <param name="dateEndBan">The date when the user's ban ends.</param>
+            <param name="email">The user's email address.</param>
+            <param name="birthdayDate">The user's birthday date.</param>
+            <param name="userDescription">A description of the user.</param>
+        </member>
+        <member name="T:MediaNexus_Backend.MediaStatusInUserList">
+            <summary>
+            Represents the possible statuses of media in a user's list.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaStatusInUserList.InProcess">
+            <summary>
+            Indicates that the media is currently being processed.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaStatusInUserList.Completed">
+            <summary>
+            Indicates that the media has been completed.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaStatusInUserList.Planned">
+            <summary>
+            Indicates that the media is planned to be watched or read.
+            </summary>
+        </member>
+        <member name="F:MediaNexus_Backend.MediaStatusInUserList.Dropped">
+            <summary>
+            Indicates that the media has been dropped.
+            </summary>
+        </member>
+        <member name="T:MediaNexus_Backend.UserMediaStatus">
+            <summary>
+            Represents the media status for a specific user, including the media ID, user ID, 
+            current status, and the last ended page or episode.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserMediaStatus.MediaID">
+            <summary>
+            Gets or sets the unique identifier for the media.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserMediaStatus.UserID">
+            <summary>
+            Gets or sets the unique identifier for the user.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserMediaStatus.Status">
+            <summary>
+            Gets or sets the current status of the media for the user.
+            </summary>
+        </member>
+        <member name="P:MediaNexus_Backend.UserMediaStatus.EndedPageOrEpisode">
+            <summary>
+            Gets or sets the last ended page or episode of the media.
+            </summary>
+        </member>
+        <member name="M:MediaNexus_Backend.UserMediaStatus.#ctor(System.Int32,System.Int32,MediaNexus_Backend.MediaStatusInUserList,System.Int32)">
+            <summary>
+            Initializes a new instance of the <see cref="T:MediaNexus_Backend.UserMediaStatus"/> class.
+            </summary>
+            <param name="mediaId">The unique identifier for the media.</param>
+            <param name="userId">The unique identifier for the user.</param>
+            <param name="status">The current status of the media for the user.</param>
+            <param name="endedPageOrEpisode">The last ended page or episode of the media (default is 0).</param>
+        </member>
+        <member name="M:MediaNexus_Backend.UserMediaStatus.ToString">
+            <summary>
+            Returns a string representation of the <see cref="T:MediaNexus_Backend.UserMediaStatus"/> instance.
+            </summary>
+            <returns>A string that represents the current <see cref="T:MediaNexus_Backend.UserMediaStatus"/>.</returns>
+        </member>
+    </members>
+</doc>
